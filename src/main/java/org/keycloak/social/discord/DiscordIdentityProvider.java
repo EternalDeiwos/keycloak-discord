@@ -34,6 +34,9 @@ import org.keycloak.models.KeycloakSession;
 import org.keycloak.services.ErrorPageException;
 import org.keycloak.services.messages.Messages;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -49,6 +52,7 @@ public class DiscordIdentityProvider
     public static final String PROFILE_URL = "https://discord.com/api/users/@me";
     public static final String GROUP_URL = "https://discord.com/api/users/@me/guilds";
     public static final String GUILD_MEMBER_URL = "https://discord.com/api/users/@me/guilds/%s/member";
+    private static final int GUILDS_PAGE_SIZE = 200;
     public static final String DEFAULT_SCOPE = "identify email";
     public static final String GUILDS_SCOPE = "guilds";
     public static final String ROLES_SCOPE = "guilds.members.read";
@@ -145,27 +149,10 @@ public class DiscordIdentityProvider
         ArrayNode groups = JsonNodeFactory.instance.arrayNode();
 
         if (getConfig().hasAllowedGuilds()) {
-            JsonNode guilds;
-            try {
-                guilds = SimpleHttp.doGet(GROUP_URL, session)
-                        .header("Authorization", "Bearer " + accessToken)
-                        .asJson();
-            } catch (Exception e) {
-                throw new IdentityBrokerException("Could not obtain guild list from Discord.", e);
-            }
-
             Set<String> allowedGuilds = getConfig().getAllowedGuildsAsSet();
-            boolean allowed = false;
-
-            for (JsonNode guild : guilds) {
-                String guildId = getJsonProperty(guild, "id");
-                log.info("Checking guildId: " + guildId);
-                if (allowedGuilds.contains(guildId)) {
-                    allowed = true;
-                    log.info("Guild allowed: " + guildId);
-                    break;
-                }
-            }
+            boolean allowed = fetchGuilds(session, "Bearer " + accessToken).stream()
+                    .map(guild -> getJsonProperty(guild, "id"))
+                    .anyMatch(allowedGuilds::contains);
 
             if (!allowed) {
                 throw new ErrorPageException(session, Response.Status.FORBIDDEN, Messages.INVALID_REQUESTER);
@@ -223,10 +210,39 @@ public class DiscordIdentityProvider
         return extractIdentityFromProfile(null, profile);
     }
 
+    /**
+     * Returns all guilds of the token owner from {@link #GROUP_URL}, following pagination.
+     *
+     * @param authorization the full Authorization header value, e.g. "Bearer &lt;token&gt;" or "Bot &lt;token&gt;"
+     */
+    public static List<JsonNode> fetchGuilds(KeycloakSession session, String authorization) {
+        List<JsonNode> guilds = new ArrayList<>();
+        String after = "0";
+        try {
+            while (true) {
+                JsonNode page = SimpleHttp.doGet(GROUP_URL, session)
+                        .header("Authorization", authorization)
+                        .param("limit", String.valueOf(GUILDS_PAGE_SIZE))
+                        .param("after", after)
+                        .asJson();
+                if (page == null || !page.isArray()) {
+                    throw new IdentityBrokerException("Unexpected guild list response from Discord: " + page);
+                }
+                page.forEach(guilds::add);
+                if (page.size() < GUILDS_PAGE_SIZE) {
+                    return guilds;
+                }
+                after = page.get(page.size() - 1).path("id").asText();
+            }
+        } catch (IOException e) {
+            throw new IdentityBrokerException("Could not obtain guild list from Discord.", e);
+        }
+    }
+
     protected String getDefaultScopes() {
         String scopes = DEFAULT_SCOPE;
 
-        if (getConfig().hasAllowedGuilds()) {
+        if (getConfig().hasAllowedGuilds() || getConfig().hasBotToken()) {
             scopes += " " + GUILDS_SCOPE;
         }
 

@@ -36,6 +36,33 @@ Keycloak Admin Console
 ```
 Note: You don't need to setup the theme in `master` realm from v0.3.0.
 
+## Guild Picker
+
+The "Discord Guild Picker" authenticator lets the user select an active guild after a Discord login.
+The choices are the guilds that both the user and your bot have joined.
+The selection is stored in the user session notes `discord.guild.id` and `discord.guild.name`.
+
+- One guild available: it is selected without a prompt.
+- No guild available: login continues without a selection. If "Guild required" is on, login fails.
+- More guilds available: the user selects one. If "Guild required" is off, the user can skip.
+
+Setup:
+```
+1. Discord Developer Portal → your application → Bot: copy the bot token. Add the bot to your guilds.
+2. Keycloak → Identity Providers → Discord: set "Bot token (guild picker)".
+   This also adds the 'guilds' scope.
+3. Authentication → Create flow (e.g. "discord post login").
+   Add the step "Discord Guild Picker" and set it to Required.
+   Optional: open its settings and turn on "Guild required".
+4. Identity Providers → Discord → Advanced settings: set "Post login flow" to this flow.
+5. Client scopes (or a client) → Mappers → By configuration → User Session Note:
+   User Session Note = discord.guild.id, Token Claim Name = discord_guild_id.
+   Do the same for discord.guild.name if necessary.
+```
+
+Keycloak does not mask the bot token in the identity provider settings or in realm exports.
+Use a vault reference, e.g. `${vault.discord_bot_token}`, instead of the plain token.
+
 ## Docker Deployment (Recommended)
 ```
 FROM curlimages/curl:8.11.1 AS download

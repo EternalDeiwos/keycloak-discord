@@ -65,4 +65,17 @@ class DiscordIdentityProviderConfigTest {
         assertTrue(config.getAllowedGuildsAsSet().containsAll(guilds));
         assertEquals(guildsAsString, config.getAllowedGuilds());
     }
+
+    @Test
+    void given_botToken_expect_hasBotToken() {
+        DiscordIdentityProviderConfig config = new DiscordIdentityProviderConfig(new IdentityProviderModel());
+        assertFalse(config.hasBotToken());
+
+        config.getConfig().put(DiscordIdentityProviderConfig.BOT_TOKEN, "  ");
+        assertFalse(config.hasBotToken());
+
+        config.getConfig().put(DiscordIdentityProviderConfig.BOT_TOKEN, "${vault.discord_bot_token}");
+        assertTrue(config.hasBotToken());
+        assertEquals("${vault.discord_bot_token}", config.getBotToken());
+    }
 }

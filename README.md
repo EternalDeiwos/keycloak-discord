@@ -63,6 +63,15 @@ Setup:
 Keycloak does not mask the bot token in the identity provider settings or in realm exports.
 Use a vault reference, e.g. `${vault.discord_bot_token}`, instead of the plain token.
 
+### Login without email
+
+By default, the provider requests the scopes `identify email`, and adds `guilds` and `guilds.members.read` when necessary.
+The "Scopes" setting of the identity provider replaces these scopes completely.
+To log in without email, set "Scopes" to `identify guilds`. Keep `guilds` if you use the guild picker or allowed guilds,
+and add `guilds.members.read` if you use the role mapping.
+Then, in Realm settings → User profile, make `email`, `firstName` and `lastName` optional.
+Discord does not supply names, so without this step Keycloak asks the user to complete the profile at the first login.
+
 ## Docker Deployment (Recommended)
 ```
 FROM curlimages/curl:8.11.1 AS download

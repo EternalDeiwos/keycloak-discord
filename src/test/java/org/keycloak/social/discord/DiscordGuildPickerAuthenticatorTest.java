@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -53,6 +54,7 @@ class DiscordGuildPickerAuthenticatorTest {
     static final String GUILD_A = "111111111111111111";
     static final String GUILD_B = "222222222222222222";
     static final String GUILD_C = "333333333333333333";
+    static final String ICON = "8342729096ea3675442027381ff50dfe";
 
     final ObjectMapper mapper = new ObjectMapper();
     final DiscordGuildPickerAuthenticator authenticator = new DiscordGuildPickerAuthenticator();
@@ -140,6 +142,14 @@ class DiscordGuildPickerAuthenticatorTest {
     }
 
     @Test
+    void formAttribute_withoutIcon_shouldOmitIconKey() {
+        Map<String, String> attribute = DiscordGuildPickerAuthenticator.formAttribute(guild(GUILD_A));
+
+        assertEquals(Map.of("id", GUILD_A, "name", "Guild " + GUILD_A), attribute);
+        assertFalse(attribute.containsKey("icon"));
+    }
+
+    @Test
     void authenticate_withoutBrokeredContext_shouldBeAttempted() {
         authNotes.clear();
 
@@ -199,12 +209,17 @@ class DiscordGuildPickerAuthenticatorTest {
     }
 
     @Test
-    void authenticate_manyCandidates_shouldShowForm() throws Exception {
-        givenGuilds(guilds(GUILD_A, GUILD_B), guilds(GUILD_A, GUILD_B));
+    void authenticate_manyCandidates_shouldShowFormWithGuildMaps() throws Exception {
+        JsonNode withIcon = mapper.readTree("{\"id\":\"" + GUILD_A + "\",\"name\":\"Guild " + GUILD_A + "\",\"icon\":\"" + ICON + "\"}");
+        givenGuilds(List.of(withIcon, guilds(GUILD_B).get(0)), guilds(GUILD_A, GUILD_B));
 
         authenticator.authenticate(context);
 
-        verify(form).setAttribute("guilds", List.of(guild(GUILD_A), guild(GUILD_B)));
+        // Map equality also asserts that the guild without an icon has no "icon" key.
+        verify(form).setAttribute("guilds", List.of(
+                Map.of("id", GUILD_A, "name", "Guild " + GUILD_A,
+                        "icon", "https://cdn.discordapp.com/icons/" + GUILD_A + "/" + ICON + ".png?size=128"),
+                Map.of("id", GUILD_B, "name", "Guild " + GUILD_B)));
         verify(form).createForm(DiscordGuildPickerAuthenticator.FORM);
         verify(context).challenge(formResponse);
     }

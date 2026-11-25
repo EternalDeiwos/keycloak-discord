@@ -22,6 +22,7 @@ import org.keycloak.vault.VaultStringSecret;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -147,12 +148,22 @@ public class DiscordGuildPickerAuthenticator implements Authenticator {
 
     private static Response createForm(AuthenticationFlowContext context, List<Guild> candidates, String error) {
         var form = context.form()
-                .setAttribute("guilds", candidates)
+                .setAttribute("guilds", candidates.stream().map(DiscordGuildPickerAuthenticator::formAttribute).toList())
                 .setAttribute("guildRequired", isGuildRequired(context));
         if (error != null) {
             form.setError(error);
         }
         return form.createForm(FORM);
+    }
+
+    /**
+     * Returns the guild as a map for the form, because FreeMarker shows record fields only as methods,
+     * which Keycloakify does not serialize. The map has no "icon" key if the guild has no icon.
+     */
+    static Map<String, String> formAttribute(Guild guild) {
+        return guild.icon() == null
+                ? Map.of("id", guild.id(), "name", guild.name())
+                : Map.of("id", guild.id(), "name", guild.name(), "icon", guild.icon());
     }
 
     private static String resolveSecret(KeycloakSession session, String value) {

@@ -51,4 +51,14 @@ class DiscordIdentityProviderFactoryTest {
         assertFalse(hasBuiltinPromptNone,
                 "Built-in 'acceptsPromptNoneForwardFromClient' should be removed to avoid duplicate prompt settings in UI");
     }
+
+    @Test
+    void getConfigProperties_botTokenShouldBeSecret() {
+        ProviderConfigProperty botToken = new DiscordIdentityProviderFactory().getConfigProperties().stream()
+                .filter(p -> DiscordIdentityProviderConfig.BOT_TOKEN.equals(p.getName()))
+                .findFirst()
+                .orElseThrow();
+        assertTrue(botToken.isSecret());
+        assertEquals(ProviderConfigProperty.PASSWORD, botToken.getType());
+    }
 }

@@ -29,6 +29,7 @@ public class DiscordIdentityProviderConfig extends OAuth2IdentityProviderConfig 
     public static final String ALLOWED_GUILDS = "allowedGuilds";
     public static final String DISCORD_ROLE_MAPPING = "discord_role_mapping";
     public static final String PROMPT_NONE = "promptNone";
+    public static final String BOT_TOKEN = "botToken";
     private static final Pattern SNOWFLAKE_PATTERN = Pattern.compile("^\\d{17,20}$");
 
     public DiscordIdentityProviderConfig(IdentityProviderModel model) {
@@ -135,5 +136,14 @@ public class DiscordIdentityProviderConfig extends OAuth2IdentityProviderConfig 
 
     public void setPromptNone(boolean promptNone) {
         getConfig().put(PROMPT_NONE, String.valueOf(promptNone));
+    }
+
+    public String getBotToken() {
+        return getConfig().get(BOT_TOKEN);
+    }
+
+    public boolean hasBotToken() {
+        String token = getBotToken();
+        return token != null && !token.isBlank();
     }
 }

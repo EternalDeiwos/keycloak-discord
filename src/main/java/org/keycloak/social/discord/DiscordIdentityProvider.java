@@ -36,7 +36,6 @@ import org.keycloak.services.messages.Messages;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,8 +53,7 @@ public class DiscordIdentityProvider
     public static final String GROUP_URL = "https://discord.com/api/users/@me/guilds";
     public static final String GUILD_MEMBER_URL = "https://discord.com/api/users/@me/guilds/%s/member";
     private static final int GUILDS_PAGE_SIZE = 200;
-    public static final String EMAIL_SCOPE = "email";
-    public static final String DEFAULT_SCOPE = "identify " + EMAIL_SCOPE;
+    public static final String DEFAULT_SCOPE = "identify email";
     public static final String GUILDS_SCOPE = "guilds";
     public static final String ROLES_SCOPE = "guilds.members.read";
     public static final String USER_PICTURE_URL = "https://cdn.discordapp.com/avatars/%s/%s.%s?size=256";
@@ -93,11 +91,6 @@ public class DiscordIdentityProvider
         }
 
         user.setUsername(username);
-
-        // Discord can return the email of an earlier authorization. Ignore it if the email scope is not requested.
-        if (!requestsScope(EMAIL_SCOPE) && profile instanceof ObjectNode objectNode) {
-            objectNode.remove(List.of("email", "verified"));
-        }
 
         JsonNode emailNode = profile.get("email");
         JsonNode verifiedNode = profile.get("verified");
@@ -252,14 +245,6 @@ public class DiscordIdentityProvider
         } catch (IOException e) {
             throw new IdentityBrokerException("Could not obtain guild list from Discord.", e);
         }
-    }
-
-    private boolean requestsScope(String scope) {
-        String scopes = getConfig().getDefaultScope();
-        if (scopes == null || scopes.isBlank()) {
-            scopes = getDefaultScopes();
-        }
-        return Arrays.asList(scopes.trim().split("\\s+")).contains(scope);
     }
 
     protected String getDefaultScopes() {

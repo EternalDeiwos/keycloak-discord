@@ -206,23 +206,4 @@ class DiscordIdentityProviderTest {
             verify(http).param("after", "200");
         }
     }
-
-    @Test
-    void testExtractIdentity_EmailScopeNotRequested_ShouldIgnoreEmail() throws Exception {
-        when(config.getDefaultScope()).thenReturn("identify guilds");
-        String json = """
-{
-  "id": "80351110224678912",
-  "username": "nelly",
-  "discriminator": "0",
-  "email": "nelly@discord.com",
-  "verified": false
-}
-        """;
-        JsonNode profile = mapper.readTree(json);
-        BrokeredIdentityContext user = provider.extractIdentityFromProfile(null, profile);
-        assertNull(user.getEmail());
-        assertFalse(profile.has("email"), "Email must not reach the attribute mappers");
-        assertFalse(profile.has("verified"));
-    }
 }

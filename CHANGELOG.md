@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/EternalDeiwos/keycloak-discord/compare/v1.4.0...v1.4.1) (2026-11-25)
+
+
+### Bug Fixes
+
+* expose the guild picker form data as maps ([86a154c](https://github.com/EternalDeiwos/keycloak-discord/commit/86a154c0780b7a0b09aa7288a16a8046c772faa9))
+
 # [1.4.0](https://github.com/EternalDeiwos/keycloak-discord/compare/v1.3.1...v1.4.0) (2026-11-25)
 
 

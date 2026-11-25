@@ -63,6 +63,15 @@ Setup:
 Keycloak does not mask the bot token in the identity provider settings or in realm exports.
 Use a vault reference, e.g. `${vault.discord_bot_token}`, instead of the plain token.
 
+### Custom themes
+
+The guild picker uses the login page `discord-select-guild.ftl` with these attributes:
+
+- `guilds`: a list of `{ id, name, icon }`. `icon` is a Discord CDN URL. It is present only if the guild has an icon.
+- `guildRequired`: a boolean.
+
+The form posts `guild=<id>`. If `guildRequired` is false, the form can post `skip=true` to continue without a guild.
+
 ### Login without email
 
 By default, the provider requests the scopes `identify email`, and adds `guilds` and `guilds.members.read` when necessary.

@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/EternalDeiwos/keycloak-discord/compare/v1.3.1...v1.4.0) (2026-11-25)
+
+
+### Features
+
+* Discord guild picker authenticator ([6c268b7](https://github.com/EternalDeiwos/keycloak-discord/commit/6c268b79389f4192b288d6a86a18b99b9ce00017))
+
 ## [1.3.1](https://github.com/iForged/keycloak-discord/compare/v1.3.0...v1.3.1) (2026-02-23)
 
 

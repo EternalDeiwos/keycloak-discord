@@ -83,7 +83,7 @@ public class DiscordIdentityProviderFactory extends AbstractIdentityProviderFact
                 .name(DiscordIdentityProviderConfig.BOT_TOKEN)
                 .type(ProviderConfigProperty.PASSWORD)
                 .secret(true)
-                .label("Bot token (guild picker)")
+                .label("Bot token")
                 .helpText("Token of the Discord bot. The 'Discord Guild Picker' authenticator uses it to read the guilds the bot has joined. " +
                         "Supports vault references, e.g. ${vault.discord_bot_token}. Also adds the 'guilds' scope.")
                 .add()

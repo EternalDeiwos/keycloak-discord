@@ -57,7 +57,8 @@ public class DiscordIdentityProvider
     public static final String GUILDS_SCOPE = "guilds";
     public static final String ROLES_SCOPE = "guilds.members.read";
     public static final String USER_PICTURE_URL = "https://cdn.discordapp.com/avatars/%s/%s.%s?size=256";
-    private static final Pattern AVATAR_HASH_PATTERN = Pattern.compile("^(a_)?[0-9a-f]{32}$");
+    public static final String GUILD_ICON_URL = "https://cdn.discordapp.com/icons/%s/%s.%s?size=128";
+    private static final Pattern IMAGE_HASH_PATTERN = Pattern.compile("^(a_)?[0-9a-f]{32}$");
     private static final Pattern DISCORD_ID_PATTERN = Pattern.compile("^\\d+$");
 
     public DiscordIdentityProvider(KeycloakSession session, DiscordIdentityProviderConfig config) {
@@ -112,17 +113,10 @@ public class DiscordIdentityProvider
     }
 
     private void setUserPicture(BrokeredIdentityContext user, JsonNode profile) {
-        if (user.getId() == null || !DISCORD_ID_PATTERN.matcher(user.getId()).matches()) {
+        String pictureUrl = cdnImageUrl(USER_PICTURE_URL, user.getId(), getJsonProperty(profile, "avatar"));
+        if (pictureUrl == null) {
             return;
         }
-
-        String avatarHash = getJsonProperty(profile, "avatar");
-        if (avatarHash == null || avatarHash.isEmpty() || !AVATAR_HASH_PATTERN.matcher(avatarHash).matches()) {
-            return;
-        }
-
-        String extension = avatarHash.startsWith("a_") ? "gif" : "png";
-        String pictureUrl = String.format(USER_PICTURE_URL, user.getId(), avatarHash, extension);
 
         user.setUserAttribute("picture", pictureUrl);
 
@@ -131,6 +125,20 @@ public class DiscordIdentityProvider
         }
 
         log.info("User picture set: " + pictureUrl);
+    }
+
+    /**
+     * Returns the Discord CDN URL of an image, or null if the ID or image hash is not valid.
+     *
+     * @param urlFormat {@link #USER_PICTURE_URL} or {@link #GUILD_ICON_URL}
+     */
+    public static String cdnImageUrl(String urlFormat, String id, String hash) {
+        if (id == null || !DISCORD_ID_PATTERN.matcher(id).matches()
+                || hash == null || !IMAGE_HASH_PATTERN.matcher(hash).matches()) {
+            return null;
+        }
+        String extension = hash.startsWith("a_") ? "gif" : "png";
+        return String.format(urlFormat, id, hash, extension);
     }
 
     protected BrokeredIdentityContext doGetFederatedIdentity(String accessToken) {

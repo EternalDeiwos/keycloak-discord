@@ -7,13 +7,22 @@
             <div id="kc-discord-guilds" class="${properties.kcFormGroupClass!}">
                 <p>${msg("discordGuildSelect")}</p>
 
-                <ul class="${properties.kcFormSocialAccountListClass!} <#if guilds?size gt 3>${properties.kcFormSocialAccountListGridClass!}</#if>">
+                <ul class="discord-guild-list" style="list-style: none; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem;">
                     <#list guilds as guild>
-                        <li class="${properties.kcFormSocialAccountListItemClass!}">
-                            <button type="submit" id="discord-guild-${guild.id()}" name="guild" value="${guild.id()}"
-                                    class="${properties.kcFormSocialAccountListButtonClass!} <#if guilds?size gt 3>${properties.kcFormSocialAccountGridItem!}</#if>">
-                                <span class="${properties.kcFormSocialAccountNameClass!}">${guild.name()}</span>
-                            </button>
+                        <li>
+                            <#if (guild.icon())??>
+                                <button type="submit" id="discord-guild-${guild.id()}" name="guild" value="${guild.id()}" title="${guild.name()}"
+                                        class="discord-guild-button ${properties.kcButtonClass!}" style="padding: 0; border-radius: 50%;">
+                                    <img class="discord-guild-icon" src="${guild.icon()}" alt="${guild.name()}" width="64" height="64"
+                                         style="display: block; border-radius: 50%;">
+                                </button>
+                            <#else>
+                                <button type="submit" id="discord-guild-${guild.id()}" name="guild" value="${guild.id()}" title="${guild.name()}"
+                                        class="discord-guild-button ${properties.kcButtonClass!} ${properties.kcButtonSecondaryClass!}"
+                                        style="min-width: 64px; height: 64px; border-radius: 32px;">
+                                    ${guild.name()}
+                                </button>
+                            </#if>
                         </li>
                     </#list>
                 </ul>

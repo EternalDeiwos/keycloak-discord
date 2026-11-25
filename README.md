@@ -49,7 +49,7 @@ The selection is stored in the user session notes `discord.guild.id` and `discor
 Setup:
 ```
 1. Discord Developer Portal → your application → Bot: copy the bot token. Add the bot to your guilds.
-2. Keycloak → Identity Providers → Discord: set "Bot token (guild picker)".
+2. Keycloak → Identity Providers → Discord: set "Bot token".
    This also adds the 'guilds' scope.
 3. Authentication → Create flow (e.g. "discord post login").
    Add the step "Discord Guild Picker" and set it to Required.

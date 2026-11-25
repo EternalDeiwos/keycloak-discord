@@ -38,7 +38,10 @@ public class DiscordGuildPickerAuthenticator implements Authenticator {
 
     private static final Logger log = Logger.getLogger(DiscordGuildPickerAuthenticator.class);
 
-    public record Guild(String id, String name) {
+    /**
+     * @param icon the guild icon URL on the Discord CDN, or null if the guild has no icon
+     */
+    public record Guild(String id, String name, String icon) {
     }
 
     @Override
@@ -119,7 +122,11 @@ public class DiscordGuildPickerAuthenticator implements Authenticator {
                 .map(guild -> guild.path("id").asText())
                 .collect(Collectors.toSet());
         return userGuilds.stream()
-                .map(guild -> new Guild(guild.path("id").asText(), guild.path("name").asText()))
+                .map(guild -> {
+                    String id = guild.path("id").asText();
+                    String icon = DiscordIdentityProvider.cdnImageUrl(DiscordIdentityProvider.GUILD_ICON_URL, id, guild.path("icon").asText(null));
+                    return new Guild(id, guild.path("name").asText(), icon);
+                })
                 .filter(guild -> botGuildIds.contains(guild.id()))
                 .toList();
     }

@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -108,6 +109,7 @@ class DiscordGuildPickerAuthenticatorTest {
         authNotes.put(PostBrokerLoginConstants.PBL_BROKERED_IDENTITY_CONTEXT, JsonSerialization.writeValueAsString(brokered));
 
         discord = mockStatic(DiscordIdentityProvider.class);
+        discord.when(() -> DiscordIdentityProvider.cdnImageUrl(any(), any(), any())).thenCallRealMethod();
     }
 
     @AfterEach
@@ -121,6 +123,20 @@ class DiscordGuildPickerAuthenticatorTest {
                 guilds(GUILD_C, GUILD_A, GUILD_B), guilds(GUILD_A, GUILD_C));
 
         assertEquals(List.of(guild(GUILD_C), guild(GUILD_A)), candidates);
+    }
+
+    @Test
+    void candidates_shouldIncludeIconUrl() throws Exception {
+        JsonNode staticIcon = mapper.readTree("{\"id\":\"" + GUILD_A + "\",\"name\":\"A\",\"icon\":\"8342729096ea3675442027381ff50dfe\"}");
+        JsonNode animatedIcon = mapper.readTree("{\"id\":\"" + GUILD_B + "\",\"name\":\"B\",\"icon\":\"a_8342729096ea3675442027381ff50dfe\"}");
+        JsonNode invalidIcon = mapper.readTree("{\"id\":\"" + GUILD_C + "\",\"name\":\"C\",\"icon\":\"../evil\"}");
+
+        List<DiscordGuildPickerAuthenticator.Guild> candidates = DiscordGuildPickerAuthenticator.candidates(
+                List.of(staticIcon, animatedIcon, invalidIcon), guilds(GUILD_A, GUILD_B, GUILD_C));
+
+        assertEquals("https://cdn.discordapp.com/icons/" + GUILD_A + "/8342729096ea3675442027381ff50dfe.png?size=128", candidates.get(0).icon());
+        assertEquals("https://cdn.discordapp.com/icons/" + GUILD_B + "/a_8342729096ea3675442027381ff50dfe.gif?size=128", candidates.get(1).icon());
+        assertNull(candidates.get(2).icon());
     }
 
     @Test
@@ -262,7 +278,7 @@ class DiscordGuildPickerAuthenticatorTest {
     }
 
     private static DiscordGuildPickerAuthenticator.Guild guild(String id) {
-        return new DiscordGuildPickerAuthenticator.Guild(id, "Guild " + id);
+        return new DiscordGuildPickerAuthenticator.Guild(id, "Guild " + id, null);
     }
 
     private List<JsonNode> guilds(String... ids) throws Exception {
